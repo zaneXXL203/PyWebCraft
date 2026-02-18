@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Guessing Game</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Guess the Number</h1>
+        <p class="subtitle">I'm thinking of a number between 1 and 100. Can you guess it?</p>
+        
+        <div class="form-group">
+            <input type="number" id="guess" min="1" max="100" placeholder="Enter your guess" onkeypress="if(event.key==='Enter') submitGuess()">
+        </div>
+        
+        <button onclick="submitGuess()">Guess</button>
+        <button onclick="resetGame()" class="reset-btn">Restart Game</button>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        function submitGuess() {
+            const guess = document.getElementById('guess').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!guess) {
+                resultDiv.textContent = '❌ Please enter a number';
+                resultDiv.style.color = '#d32f2f';
+                return;
+            }
+            
+            fetch('/guess', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    guess: guess
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    resultDiv.textContent = '❌ ' + data.error;
+                    resultDiv.style.color = '#d32f2f';
+                } else {
+                    resultDiv.textContent = data.message;
+                    if (data.result === 'correct') {
+                        resultDiv.style.color = '#4caf50';
+                    } else {
+                        resultDiv.style.color = '#0B3D91';
+                    }
+                    if (data.result === 'correct') {
+                        document.getElementById('guess').disabled = true;
+                    }
+                }
+            });
+        }
+        
+        function resetGame() {
+            fetch('/reset')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('guess').value = '';
+                document.getElementById('guess').disabled = false;
+                document.getElementById('result').textContent = '';
+            });
+        }
+    </script>
+</body>
+</html>

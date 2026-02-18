@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employees List</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>👥 Employees List</h1>
+        
+        <div class="form-section">
+            <h2>Add New Employee</h2>
+            <div class="form-row">
+                <input type="text" id="name" placeholder="Name">
+                <input type="number" id="age" placeholder="Age">
+                <input type="text" id="job" placeholder="Job Title">
+            </div>
+            <button onclick="addEmployee()">Add Employee</button>
+        </div>
+        
+        <div id="result" class="result"></div>
+        
+        <table id="employees-table" class="employees-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Age</th>
+                    <th>Job</th>
+                </tr>
+            </thead>
+            <tbody id="employees-body">
+            </tbody>
+        </table>
+        
+        <button onclick="exportCSV()" class="export-btn">📥 Export as CSV</button>
+    </div>
+
+    <script>
+        function loadEmployees() {
+            fetch('/get_employees')
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('employees-body');
+                tbody.innerHTML = '';
+                data.employees.forEach(emp => {
+                    const row = `<tr>
+                        <td>${emp[0]}</td>
+                        <td>${emp[1]}</td>
+                        <td>${emp[2]}</td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            });
+        }
+        
+        function addEmployee() {
+            const name = document.getElementById('name').value;
+            const age = document.getElementById('age').value;
+            const job = document.getElementById('job').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!name || !age || !job) {
+                resultDiv.textContent = '❌ Please fill in all fields';
+                resultDiv.style.color = '#d32f2f';
+                return;
+            }
+            
+            fetch('/add_employee', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({name: name, age: age, job: job})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    resultDiv.textContent = '❌ ' + data.error;
+                    resultDiv.style.color = '#d32f2f';
+                } else {
+                    resultDiv.textContent = `✅ ${name} added successfully`;
+                    resultDiv.style.color = '#4caf50';
+                    document.getElementById('name').value = '';
+                    document.getElementById('age').value = '';
+                    document.getElementById('job').value = '';
+                    loadEmployees();
+                }
+            });
+        }
+        
+        function exportCSV() {
+            window.location.href = '/export_csv';
+        }
+        
+        loadEmployees();
+    </script>
+</body>
+</html>

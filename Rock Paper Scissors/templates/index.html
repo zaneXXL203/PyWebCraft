@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock Paper Scissors</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>✋ Rock Paper Scissors</h1>
+        
+        <div class="buttons-group">
+            <button class="choice-btn" onclick="play('R')">🪨 Rock</button>
+            <button class="choice-btn" onclick="play('P')">📃 Paper</button>
+            <button class="choice-btn" onclick="play('S')">✂️ Scissors</button>
+        </div>
+        
+        <div id="result" class="result-container" style="display:none;">
+            <div class="choices">
+                <div class="choice">
+                    <p>You</p>
+                    <p id="user-choice" style="font-size: 48px;"></p>
+                </div>
+                <div class="vs">VS</div>
+                <div class="choice">
+                    <p>Computer</p>
+                    <p id="computer-choice" style="font-size: 48px;"></p>
+                </div>
+            </div>
+            <div id="result-text" class="result-text"></div>
+        </div>
+    </div>
+
+    <script>
+        function play(choice) {
+            fetch(`/play/${choice}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    document.getElementById('user-choice').textContent = data.user_choice;
+                    document.getElementById('computer-choice').textContent = data.computer_choice;
+                    
+                    const resultText = document.getElementById('result-text');
+                    if (data.result === 'WIN') {
+                        resultText.textContent = '🏆 YOU WIN!';
+                        resultText.style.color = '#4caf50';
+                    } else if (data.result === 'LOSE') {
+                        resultText.textContent = '💻 COMPUTER WINS!';
+                        resultText.style.color = '#f44336';
+                    } else {
+                        resultText.textContent = '🪢 TIE!';
+                        resultText.style.color = '#0B3D91';
+                    }
+                    
+                    document.getElementById('result').style.display = 'block';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

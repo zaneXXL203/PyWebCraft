@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Helper</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>🚗 Car Helper</h1>
+        <p class="subtitle">Control your car with voice commands</p>
+        
+        <div class="car-display">
+            <p id="car-status">Car Status: OFF</p>
+        </div>
+        
+        <div class="commands-grid">
+            <button class="cmd-btn start-btn" onclick="executeCommand('START')">🚗 Start</button>
+            <button class="cmd-btn stop-btn" onclick="executeCommand('STOP')">🛑 Stop</button>
+            <button class="cmd-btn help-btn" onclick="executeCommand('HELP')">❓ Help</button>
+        </div>
+        
+        <div class="input-group">
+            <input type="text" id="command-input" placeholder="Enter command or type HELP..." onkeypress="if(event.key==='Enter') executeCommand(document.getElementById('command-input').value)">
+            <button onclick="executeCommand(document.getElementById('command-input').value)">Send</button>
+        </div>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        function executeCommand(cmd) {
+            const resultDiv = document.getElementById('result');
+            const input = document.getElementById('command-input');
+            
+            if (!cmd && !input.value) {
+                resultDiv.textContent = '❌ Please enter a command';
+                resultDiv.style.color = '#d32f2f';
+                return;
+            }
+            
+            const command = cmd || input.value;
+            
+            fetch('/execute_command', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({command: command})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    resultDiv.textContent = data.message;
+                    resultDiv.style.color = '#4caf50';
+                    if (command.toUpperCase() === 'START') {
+                        document.getElementById('car-status').textContent = 'Car Status: RUNNING ✅';
+                        document.getElementById('car-status').style.color = '#4caf50';
+                    } else if (command.toUpperCase() === 'STOP') {
+                        document.getElementById('car-status').textContent = 'Car Status: OFF';
+                        document.getElementById('car-status').style.color = '#d32f2f';
+                    }
+                } else if (data.status === 'info') {
+                    resultDiv.textContent = data.message;
+                    resultDiv.style.color = '#0B3D91';
+                } else {
+                    resultDiv.textContent = data.message;
+                    resultDiv.style.color = '#d32f2f';
+                }
+                input.value = '';
+            });
+        }
+    </script>
+</body>
+</html>

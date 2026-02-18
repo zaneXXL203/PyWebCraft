@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trivia Game</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Trivia Game</h1>
+        
+        <div id="game-content">
+            <div id="start-screen">
+                <p>Test your Python knowledge!</p>
+                <button onclick="startGame()">Start Game</button>
+            </div>
+            
+            <div id="question-screen" style="display:none;">
+                <div class="progress-bar">
+                    <span id="question-number"></span>
+                </div>
+                <div class="question-container">
+                    <h2 id="question-text"></h2>
+                </div>
+                <div class="input-group">
+                    <input type="text" id="answer-input" placeholder="Enter your answer..." onkeypress="if(event.key==='Enter') submitAnswer()">
+                    <button onclick="submitAnswer()">Submit</button>
+                </div>
+                <div id="feedback"></div>
+            </div>
+            
+            <div id="end-screen" style="display:none;">
+                <h2>Game Over!</h2>
+                <p class="score-display">Your Score: <span id="final-score">0</span>/5</p>
+                <button onclick="location.reload()">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentQuestion = null;
+        
+        function startGame() {
+            fetch('/start_game')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('start-screen').style.display = 'none';
+                document.getElementById('question-screen').style.display = 'block';
+                loadQuestion();
+            });
+        }
+        
+        function loadQuestion() {
+            fetch('/get_question')
+            .then(response => response.json())
+            .then(data => {
+                if (data.game_over) {
+                    document.getElementById('question-screen').style.display = 'none';
+                    document.getElementById('end-screen').style.display = 'block';
+                    document.getElementById('final-score').textContent = data.score;
+                } else {
+                    currentQuestion = data.question;
+                    document.getElementById('question-text').textContent = data.question;
+                    document.getElementById('question-number').textContent = `Question ${data.question_number}/${data.total_questions}`;
+                    document.getElementById('answer-input').value = '';
+                    document.getElementById('feedback').textContent = '';
+                }
+            });
+        }
+        
+        function submitAnswer() {
+            const answer = document.getElementById('answer-input').value;
+            const feedback = document.getElementById('feedback');
+            
+            if (!answer) {
+                feedback.textContent = '❌ Please enter an answer';
+                feedback.style.color = '#d32f2f';
+                return;
+            }
+            
+            fetch(`/answer/${encodeURIComponent(answer)}`, {
+                method: 'POST',
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.correct) {
+                    feedback.textContent = `✅ Correct! The answer is: ${data.correct_answer}`;
+                    feedback.style.color = '#4caf50';
+                } else {
+                    feedback.textContent = `❌ Wrong! The correct answer is: ${data.correct_answer}`;
+                    feedback.style.color = '#d32f2f';
+                }
+                
+                setTimeout(() => {
+                    loadQuestion();
+                }, 2000);
+            });
+        }
+    </script>
+</body>
+</html>

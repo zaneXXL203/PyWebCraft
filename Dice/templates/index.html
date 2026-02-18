@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dice Roller</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>🎲 Dice Roller</h1>
+        <p class="subtitle">Roll the dice and get a number between 1 and 10!</p>
+        
+        <button onclick="rollDice()">Roll Dice</button>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        function rollDice() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = 'Rolling...';
+            resultDiv.style.color = '#0B3D91';
+            
+            fetch('/roll_dice')
+            .then(response => response.json())
+            .then(data => {
+                resultDiv.textContent = `🎲 You rolled: ${data.result}`;
+                resultDiv.style.color = '#0B3D91';
+                resultDiv.style.fontSize = '32px';
+            });
+        }
+    </script>
+</body>
+</html>

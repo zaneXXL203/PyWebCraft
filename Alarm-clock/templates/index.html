@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alarm Clock</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>⏰ Alarm Clock</h1>
+        <p class="subtitle">Set an alarm to wake up on time!</p>
+        
+        <div class="clock-display">
+            <p id="current-time">00:00:00</p>
+        </div>
+        
+        <div class="form-group">
+            <label for="alarm-time">Set Alarm Time:</label>
+            <input type="time" id="alarm-time">
+        </div>
+        
+        <div class="button-group">
+            <button onclick="setAlarm()" class="set-btn">Set Alarm</button>
+            <button onclick="stopAlarm()" class="stop-btn">Stop Alarm</button>
+        </div>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('current-time').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+        
+        setInterval(updateClock, 1000);
+        updateClock();
+        
+        function setAlarm() {
+            const alarmTime = document.getElementById('alarm-time').value;
+            const resultDiv = document.getElementById('result');
+            
+            if (!alarmTime) {
+                resultDiv.textContent = '❌ Please select a time';
+                resultDiv.style.color = '#d32f2f';
+                return;
+            }
+            
+            fetch('/set_alarm', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({time: alarmTime})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    resultDiv.textContent = '❌ ' + data.error;
+                    resultDiv.style.color = '#d32f2f';
+                } else {
+                    resultDiv.textContent = '✅ ' + data.message;
+                    resultDiv.style.color = '#4caf50';
+                }
+            });
+        }
+        
+        function stopAlarm() {
+            fetch('/stop_alarm')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('result').textContent = '✅ ' + data.message;
+                document.getElementById('result').style.color = '#0B3D91';
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>✓ To-Do List</h1>
+        
+        <div class="input-group">
+            <input type="text" id="taskInput" placeholder="Add a new task..." onkeypress="if(event.key==='Enter') addTask()">
+            <button onclick="addTask()">Add Task</button>
+        </div>
+        
+        <ul id="taskList" class="task-list"></ul>
+    </div>
+
+    <script>
+        function loadTasks() {
+            fetch('/tasks')
+            .then(response => response.json())
+            .then(tasks => {
+                const taskList = document.getElementById('taskList');
+                taskList.innerHTML = '';
+                tasks.forEach((task, index) => {
+                    const li = document.createElement('li');
+                    li.className = task.complete ? 'completed' : '';
+                    li.innerHTML = `
+                        <div class="task-content">
+                            <input type="checkbox" ${task.complete ? 'checked' : ''} onchange="completeTask(${index})">
+                            <span>${task.description}</span>
+                        </div>
+                        <button class="delete-btn" onclick="deleteTask(${index})">🗑️</button>
+                    `;
+                    taskList.appendChild(li);
+                });
+            });
+        }
+        
+        function addTask() {
+            const input = document.getElementById('taskInput');
+            const description = input.value.trim();
+            
+            if (!description) {
+                alert('Please enter a task');
+                return;
+            }
+            
+            fetch('/add_task', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({description: description})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    input.value = '';
+                    loadTasks();
+                }
+            });
+        }
+        
+        function completeTask(index) {
+            fetch(`/complete_task/${index}`, {
+                method: 'PUT',
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadTasks();
+                }
+            });
+        }
+        
+        function deleteTask(index) {
+            if (confirm('Delete this task?')) {
+                fetch(`/delete_task/${index}`, {
+                    method: 'DELETE',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadTasks();
+                    }
+                });
+            }
+        }
+        
+        loadTasks();
+    </script>
+</body>
+</html>

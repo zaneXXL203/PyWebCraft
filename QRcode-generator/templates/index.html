@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>📱 QR Code Generator</h1>
+        <p class="subtitle">Convert text or URLs into QR codes</p>
+        
+        <div class="form-group">
+            <label for="text-input">Enter Text or URL:</label>
+            <textarea id="text-input" placeholder="Enter text, URL, or any data..." rows="4"></textarea>
+        </div>
+        
+        <button onclick="generateQR()">Generate QR Code</button>
+        
+        <div id="result" class="result" style="display:none;">
+            <p id="result-message"></p>
+        </div>
+    </div>
+
+    <script>
+        function generateQR() {
+            const text = document.getElementById('text-input').value;
+            const resultDiv = document.getElementById('result');
+            const resultMessage = document.getElementById('result-message');
+            
+            if (!text) {
+                resultMessage.textContent = '❌ Please enter text or URL';
+                resultMessage.style.color = '#d32f2f';
+                resultDiv.style.display = 'block';
+                return;
+            }
+            
+            fetch('/generate_qr', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({text: text})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    resultMessage.textContent = '❌ Error: ' + data.error;
+                    resultMessage.style.color = '#d32f2f';
+                } else {
+                    resultMessage.textContent = `✅ QR Code generated successfully as ${data.filename}`;
+                    resultMessage.style.color = '#4caf50';
+                }
+                resultDiv.style.display = 'block';
+            });
+        }
+    </script>
+</body>
+</html>

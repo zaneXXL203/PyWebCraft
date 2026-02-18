@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Automation</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Excel Automation</h1>
+        <p class="subtitle">Upload an Excel file to apply 10% discount and generate charts</p>
+        
+        <div class="upload-area">
+            <input type="file" id="file-input" accept=".xlsx" onchange="handleFileSelect()">
+            <label for="file-input" class="upload-label">
+                <span>📁 Choose Excel File (.xlsx)</span>
+                <p class="small-text">or drag and drop</p>
+            </label>
+            <p id="file-name"></p>
+        </div>
+        
+        <button onclick="processExcel()">Process Excel</button>
+        
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+        
+        function handleFileSelect() {
+            const fileInput = document.getElementById('file-input');
+            const fileName = document.getElementById('file-name');
+            
+            if (fileInput.files.length > 0) {
+                selectedFile = fileInput.files[0];
+                fileName.textContent = `Selected: ${selectedFile.name}`;
+            }
+        }
+        
+        function processExcel() {
+            const resultDiv = document.getElementById('result');
+            
+            if (!selectedFile) {
+                resultDiv.textContent = '❌ Please select a file';
+                resultDiv.style.color = '#d32f2f';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            
+            fetch('/process_excel', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    resultDiv.textContent = '❌ ' + data.error;
+                    resultDiv.style.color = '#d32f2f';
+                } else {
+                    resultDiv.textContent = `✅ Excel processed successfully! File: ${data.filename}`;
+                    resultDiv.style.color = '#4caf50';
+                }
+            });
+        }
+        
+        // Drag and drop
+        const uploadArea = document.querySelector('.upload-area');
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.background = '#f0f0f0';
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.background = '';
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.background = '';
+            document.getElementById('file-input').files = e.dataTransfer.files;
+            handleFileSelect();
+        });
+    </script>
+</body>
+</html>
